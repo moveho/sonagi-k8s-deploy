@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import requests, socket, json
 
-url = "http://backend-lb:8080"
+url = "http://backend:8081"
 
 app = Flask(__name__)
 

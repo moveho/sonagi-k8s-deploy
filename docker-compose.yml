@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3"
 
 services:  
   backend:
@@ -21,7 +21,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
-      start_period: 60s
 
   backend-lb:
     build:

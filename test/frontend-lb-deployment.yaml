@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.9.0 (093c756)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: frontend-lb
+  name: frontend-lb
+spec:
+  replicas: 1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: frontend-lb
+    spec:
+      containers:
+      - image: frontend-lb
+        name: frontend-lb
+        ports:
+        - containerPort: 35000
+        resources: {}
+      restartPolicy: Always
+status: {}

@@ -1,0 +1,37 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.9.0 (093c756)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: backend
+  name: backend
+spec:
+  replicas: 3
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: backend
+    spec:
+      containers:
+      - env:
+        - name: HEALTHCHECK
+          value: "TRUE"
+        image: backend
+        livenessProbe:
+          exec:
+            command:
+            - curl
+            - -f
+            - http://localhost:8081/healthcheck
+          failureThreshold: 3
+          periodSeconds: 5
+          timeoutSeconds: 5
+        name: backend
+        resources: {}
+      restartPolicy: Always
+status: {}

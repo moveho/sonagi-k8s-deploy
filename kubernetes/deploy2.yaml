@@ -1,0 +1,164 @@
+# db-pv.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: db-pv
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  nfs:
+    path: /data_dir
+    server: 192.168.56.101
+---
+# db-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    service: db-pvc
+  name: db-pvc
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+# database-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: database
+  name: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: database
+  template:
+    metadata:
+      labels:
+        service: database
+    spec:
+      containers:
+      - env:
+        - name: MYSQL_DATABASE
+          value: DOCKERTEST
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-pass
+              key: password
+        image: mariadb:10.9
+        name: database
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: db-pvc
+      restartPolicy: Always
+      volumes:
+        - name: db-pvc
+          persistentVolumeClaim:
+            claimName: db-pvc
+---
+# database-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: database
+  name: database
+spec:
+  ports:
+  - name: "3306"
+    port: 3306
+    targetPort: 3306
+  selector:
+    service: database
+---
+# backend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: backend
+  name: backend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      service: backend
+  template:
+    metadata:
+      labels:
+        service: backend
+    spec:
+      containers:
+      - image: moveho/dcompose-v2-backend:latest
+        imagePullPolicy: Always
+        name: backend
+        ports:
+        - containerPort: 8081
+      restartPolicy: Always
+---
+# backend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: backend
+  name: backend
+spec:
+  ports:
+  - name: "8081"
+    port: 8081
+    targetPort: 8081
+  selector:
+    service: backend
+---
+# frontend-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    service: frontend
+  name: frontend
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      service: frontend
+  template:
+    metadata:
+      labels:
+        service: frontend
+    spec:
+      containers:
+      - image: moveho/new-dcompose:v1
+        imagePullPolicy: Always
+        name: frontend
+        ports:
+        - containerPort: 35001
+      restartPolicy: Always
+---
+# frontend-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: frontend
+  name: frontend
+spec:
+  type: NodePort
+  ports:
+  - name: "80"
+    port: 80
+    targetPort: 35001
+  selector:
+    service: frontend
+
